@@ -14,5 +14,39 @@
       "isAdmin": false,
       "id": 2
     }
+  ],
+  "products": [
+    {
+      "title": "Product 1",
+      "price": "500",
+      "desc": "Hello",
+      "image": "https://thumbs.dreamstime.com/b/beautiful-rain-forest-ang-ka-nature-trail-doi-inthanon-national-park-thailand-36703721.jpg",
+      "category": "forest",
+      "id": 1
+    },
+    {
+      "title": "Product 2",
+      "price": "780",
+      "desc": "Hello 2",
+      "image": "https://thumbs.dreamstime.com/b/beautiful-rain-forest-ang-ka-nature-trail-doi-inthanon-national-park-thailand-36703721.jpg",
+      "category": "forest",
+      "id": 2
+    },
+    {
+      "title": "Product 3",
+      "price": "450",
+      "desc": "Hello 3",
+      "image": "https://media.istockphoto.com/photos/mountain-landscape-picture-id517188688?k=20&m=517188688&s=612x612&w=0&h=i38qBm2P-6V4vZVEaMy_TaTEaoCMkYhvLCysE7yJQ5Q=",
+      "category": "mountain",
+      "id": 3
+    },
+    {
+      "title": "Product 4",
+      "price": "570",
+      "desc": "Hello 4",
+      "image": "https://images.ctfassets.net/hrltx12pl8hq/a2hkMAaruSQ8haQZ4rBL9/8ff4a6f289b9ca3f4e6474f29793a74a/nature-image-for-website.jpg?fit=fill&w=480&h=320",
+      "category": "lake",
+      "id": 4
+    }
   ]
 }

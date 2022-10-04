@@ -87,3 +87,200 @@ async function registerUser(){
 };
 
 registerUserBtn.addEventListener('click', registerUser);
+
+// login logic
+let showUsername = document.querySelector('#showUsername');
+
+function checkLoginLogoutStatus(){
+    let user = localStorage.getItem('user');
+    if(!user){
+        loginUserModalBtn.parentNode.style.display = 'block';
+        logoutUserBtn.parentNode.style.display = 'none';
+        showUsername.innerText = 'No user';
+    }else{
+        loginUserModalBtn.parentNode.style.display = 'none';
+        logoutUserBtn.parentNode.style.display = 'block';
+        showUsername.innerText = JSON.parse(user).user;
+    };
+    showAdminPanel();
+};
+checkLoginLogoutStatus();
+
+let loginUsernameInp = document.querySelector('#login-username');
+let loginPasswordInp = document.querySelector('#login-password');
+
+function checkUserInUsers(username, users){
+    return users.some(item => item.username === username);
+};
+
+function checkUserPassword(user, password){
+    return user.password === password;
+};
+
+function initStorage(){
+    if(!localStorage.getItem('user')){
+        localStorage.setItem('user', '{}');
+    };
+};
+
+function setUserToStorage(username, isAdmin){
+    localStorage.setItem('user', JSON.stringify({user: username, isAdmin: isAdmin}));
+};
+
+async function loginUser(){
+    let res = await fetch(USERS_API);
+    let users = await res.json();
+
+    if(!loginUsernameInp.value.trim() || !loginPasswordInp.value.trim()){
+        alert('Some inputs are empty!');
+        return;
+    };
+
+    if(!checkUserInUsers(loginUsernameInp.value, users)){
+        alert('User not found!');
+        return;
+    };
+
+    let userObj = users.find(item => item.username === loginUsernameInp.value);
+
+    if(!checkUserPassword(userObj, loginPasswordInp.value)){
+        alert('Wrong password!');
+        return;
+    };
+
+    initStorage();
+
+    setUserToStorage(userObj.username, userObj.isAdmin);
+
+    loginUsernameInp.value = '';
+    loginPasswordInp.value = '';
+
+    checkLoginLogoutStatus();
+
+    let btnCloseModal = document.querySelector('#btn-close-modal');
+    btnCloseModal.click();
+
+    render();
+};
+
+loginUserBtn.addEventListener('click', loginUser);
+
+// logout logic
+logoutUserBtn.addEventListener('click', () => {
+    localStorage.removeItem('user');
+    checkLoginLogoutStatus();
+    render();
+});
+// account logic end
+
+// create product logic
+function checkUserForProductCreate(){
+    let user = JSON.parse(localStorage.getItem('user'));
+    if(user) return user.isAdmin;
+    return false;
+};
+
+function showAdminPanel(){
+    let adminPanel = document.querySelector('#admin-panel');
+    if(!checkUserForProductCreate()){
+        adminPanel.setAttribute('style', 'display: none !important;');
+    }else{
+        adminPanel.setAttribute('style', 'display: block !important;');
+    };
+};
+
+// inputs group
+let productTitle = document.querySelector('#product-title');
+let productPrice = document.querySelector('#product-price');
+let productDesc = document.querySelector('#product-desc');
+let productImage = document.querySelector('#product-image');
+let productCategory = document.querySelector('#product-category');
+
+const PRODUCTS_API = 'http://localhost:8000/products';
+
+async function createProduct(){
+    if(
+        !productTitle.value.trim() ||
+        !productPrice.value.trim() ||
+        !productDesc.value.trim() ||
+        !productImage.value.trim() ||
+        !productCategory.value.trim()
+    ){
+        alert('Some inputs are empty!');
+        return;
+    };
+
+    let productObj = {
+        title: productTitle.value,
+        price: productPrice.value,
+        desc: productDesc.value,
+        image: productImage.value,
+        category: productCategory.value
+    };
+
+    await fetch(PRODUCTS_API, {
+        method: 'POST',
+        body: JSON.stringify(productObj),
+        headers: {
+            "Content-Type": "application/json;charset=utf-8"
+        }
+    });
+
+    productTitle.value = '';
+    productPrice.value = '';
+    productDesc.value = '';
+    productImage.value = '';
+    productCategory.value = '';
+
+    render();
+};
+
+let addProductBtn = document.querySelector('#add-product-btn');
+addProductBtn.addEventListener('click', createProduct);
+
+// read
+let currentPage = 1;
+let search = '';
+let category = '';
+
+async function render(){
+    let productsList = document.querySelector('#products-list');
+    productsList.innerHTML = '';
+    let res = await fetch(PRODUCTS_API);
+    let data = await res.json();
+
+    data.forEach(item => {
+        productsList.innerHTML += `
+        <div class="card m-5" style="width: 18rem;">
+            <img src=${item.image} class="card-img-top" alt="..." height="150">
+            <div class="card-body">
+                <h5 class="card-title">${item.title}</h5>
+                <p class="card-text">${item.desc}</p>
+                <p class="card-text">${item.price}</p>
+                <p class="card-text">${item.category}</p>
+                ${checkUserForProductCreate() ?
+                `<a href="#" class="btn btn-danger btn-delete" id="${item.id}">DELETE</a>
+                <a href="#" class="btn btn-dark btn-edit" id="${item.id}">EDIT</a>`
+                :
+                ''
+                }
+            </div>
+        </div>
+        `;
+    });
+
+    if(data.length === 0) return;
+    addCategoryToDropdownMenu();
+};
+render();
+
+async function addCategoryToDropdownMenu(){
+    let res = await fetch(PRODUCTS_API);
+    let data = await res.json();
+    let categories = new Set(data.map(item => item.category));
+    let categoriesList = document.querySelector('.dropdown-menu');
+    categoriesList.innerHTML = '<li><a class="dropdown-item" href="#">all</a></li>';
+    categories.forEach(item => {
+        categoriesList.innerHTML += `<li><a class="dropdown-item" href="#">${item}</a></li>`;
+    });
+};
