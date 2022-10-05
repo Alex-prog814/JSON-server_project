@@ -246,7 +246,11 @@ let category = '';
 async function render(){
     let productsList = document.querySelector('#products-list');
     productsList.innerHTML = '';
-    let res = await fetch(PRODUCTS_API);
+    let requestAPI = `${PRODUCTS_API}?q=${search}&category=${category}&_page=${currentPage}&_limit=3`;
+    if(!category){
+        requestAPI = `${PRODUCTS_API}?q=${search}&_page=${currentPage}&_limit=3`;
+    };
+    let res = await fetch(requestAPI);
     let data = await res.json();
 
     data.forEach(item => {
@@ -271,6 +275,8 @@ async function render(){
 
     if(data.length === 0) return;
     addCategoryToDropdownMenu();
+    addDeleteEvent();
+    addEditEvent();
 };
 render();
 
@@ -283,4 +289,109 @@ async function addCategoryToDropdownMenu(){
     categories.forEach(item => {
         categoriesList.innerHTML += `<li><a class="dropdown-item" href="#">${item}</a></li>`;
     });
+
+    addClickEventToDropdownItem();
 };
+
+// delete
+async function deleteProduct(e){
+    let productId = e.target.id;
+
+    await fetch(`${PRODUCTS_API}/${productId}`, {
+        method: 'DELETE'
+    });
+
+    render();
+};
+
+function addDeleteEvent(){
+    let deleteProductBtn = document.querySelectorAll('.btn-delete');
+    deleteProductBtn.forEach(item => {
+        item.addEventListener('click', deleteProduct);
+    });
+};
+
+// update
+let saveChangesBtn = document.querySelector('.save-changes-btn');
+
+function checkCreateAndSaveBtn(){
+    if(saveChangesBtn.id){
+        addProductBtn.setAttribute('style', 'display: none;')
+        saveChangesBtn.setAttribute('style', 'display: block;');
+    }else{
+        addProductBtn.setAttribute('style', 'display: block;')
+        saveChangesBtn.setAttribute('style', 'display: none;');
+    };
+};
+checkCreateAndSaveBtn();
+
+async function addProductDataToForm(e){
+    let productId = e.target.id;
+    let res = await fetch(`${PRODUCTS_API}/${productId}`);
+    let productObj = await res.json();
+    
+    productTitle.value = productObj.title;
+    productPrice.value = productObj.price;
+    productDesc.value = productObj.desc;
+    productImage.value = productObj.image;
+    productCategory.value = productObj.category;
+
+    saveChangesBtn.setAttribute('id', productObj.id);
+
+    checkCreateAndSaveBtn();
+};
+
+function addEditEvent(){
+    let btnEditProduct = document.querySelectorAll('.btn-edit');
+    btnEditProduct.forEach(item => {
+        item.addEventListener('click', addProductDataToForm);
+    });
+};
+
+async function saveChanges(e){
+    let updatedProductObj = {
+        id: e.target.id,
+        title: productTitle.value,
+        price: productPrice.value,
+        desc: productDesc.value,
+        image: productImage.value,
+        category: productCategory.value
+    };
+
+    await fetch(`${PRODUCTS_API}/${e.target.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(updatedProductObj),
+        headers: {
+            'Content-Type': 'application/json;charset=utf-8'
+        }
+    });
+
+    productTitle.value = '';
+    productPrice.value = '';
+    productDesc.value = '';
+    productImage.value = '';
+    productCategory.value = '';
+
+    saveChangesBtn.removeAttribute('id');
+
+    checkCreateAndSaveBtn();
+
+    render();
+};
+
+saveChangesBtn.addEventListener('click', saveChanges);
+
+// filtering
+function filterOnCategory(e){
+    if(e.target.innerText === 'all'){
+        category = '';
+    }else{
+        category = e.target.innerText;
+    };
+    render();
+};
+
+function addClickEventToDropdownItem(){
+    let categoryItem = document.querySelectorAll('.dropdown-item');
+    categoryItem.forEach(item => item.addEventListener('click', filterOnCategory));
+};  
