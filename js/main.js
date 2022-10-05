@@ -395,3 +395,55 @@ function addClickEventToDropdownItem(){
     let categoryItem = document.querySelectorAll('.dropdown-item');
     categoryItem.forEach(item => item.addEventListener('click', filterOnCategory));
 };  
+
+// search
+let searchInp = document.querySelector('#search-inp');
+searchInp.addEventListener('input', () => {
+    search = searchInp.value;
+    currentPage = 1;
+    render();
+});
+
+// pagination
+let nextPage = document.querySelector('#next-page');
+let prevPage = document.querySelector('#prev-page');
+
+async function checkPages(){
+    let res = await fetch(PRODUCTS_API);
+    let data = await res.json();
+    let pages = Math.ceil(data.length / 3);
+
+    if(currentPage === 1){
+        prevPage.style.display = 'none';
+        nextPage.style.display = 'block';
+    }else if(currentPage === pages){
+        prevPage.style.display = 'block';
+        nextPage.style.display = 'none';
+    }else{
+        prevPage.style.display = 'block';
+        nextPage.style.display = 'block';
+    };
+};
+checkPages();
+
+nextPage.addEventListener('click', () => {
+    currentPage++;
+    render();
+    checkPages();
+});
+
+prevPage.addEventListener('click', () => {
+    currentPage--;
+    render();
+    checkPages();
+});
+
+// home
+let homeBtn = document.querySelector('#home-btn');
+homeBtn.addEventListener('click', () => {
+    currentPage = 1;
+    category = '';
+    search = '';
+    render();
+    checkPages();
+});
